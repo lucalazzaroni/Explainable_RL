@@ -1,5 +1,6 @@
 import logging
 import torch
+import numpy as np
 from gym import spaces
 
 from rl_agents.agents.common.memory import Transition
@@ -41,10 +42,12 @@ class DQNAgent(AbstractDQNAgent):
         # Compute concatenate the batch elements
         if not isinstance(batch.state, torch.Tensor):
             # logger.info("Casting the batch to torch.tensor")
-            state = torch.cat(tuple(torch.tensor([batch.state], dtype=torch.float))).to(self.device)
+            tmp_batch = np.array([batch.state])
+            state = torch.cat(tuple(torch.tensor(tmp_batch, dtype=torch.float))).to(self.device)
             action = torch.tensor(batch.action, dtype=torch.long).to(self.device)
             reward = torch.tensor(batch.reward, dtype=torch.float).to(self.device)
-            next_state = torch.cat(tuple(torch.tensor([batch.next_state], dtype=torch.float))).to(self.device)
+            tmp_nxt_batch = np.array([batch.next_state])
+            next_state = torch.cat(tuple(torch.tensor(tmp_nxt_batch, dtype=torch.float))).to(self.device)
             terminal = torch.tensor(batch.terminal, dtype=torch.bool).to(self.device)
             batch = Transition(state, action, reward, next_state, terminal, batch.info)
 
@@ -77,7 +80,8 @@ class DQNAgent(AbstractDQNAgent):
         return values.data.cpu().numpy(), actions.data.cpu().numpy()
 
     def get_batch_state_action_values(self, states):
-        return self.value_net(torch.tensor(states, dtype=torch.float).to(self.device)).data.cpu().numpy()
+        batch = np.array(states)
+        return self.value_net(torch.tensor(batch, dtype=torch.float).to(self.device)).data.cpu().numpy()
 
     def save(self, filename):
         state = {'state_dict': self.value_net.state_dict(),

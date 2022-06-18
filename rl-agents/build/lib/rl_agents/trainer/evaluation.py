@@ -185,8 +185,10 @@ class Evaluation(object):
         
         
         # Step the environment
-        
-        img = self.env.render(mode = 'rgb_array')
+        if self.display_env and not self.training:
+            img = self.env.render(mode = 'rgb_array')
+        else:
+            img = None
         previous_observation, action = self.observation[0], actions[0]
         self.observation, reward, terminal, info = self.wrapped_env.step(action)
 

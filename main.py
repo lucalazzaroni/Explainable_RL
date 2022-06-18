@@ -15,7 +15,7 @@ def main():
     env = load_environment(env_config)
     agent = load_agent(agent_config, env)
     
-    evaluation = Evaluation(env, agent, num_episodes=10, display_env=False, display_agent=False)
+    evaluation = Evaluation(env, agent, num_episodes=5, display_env=False, display_agent=False)
     print(f"Ready to train {agent} on {env}")
     evaluation.train()
     
