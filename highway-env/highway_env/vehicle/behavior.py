@@ -8,6 +8,8 @@ from highway_env.vehicle.controller import ControlledVehicle
 from highway_env import utils
 from highway_env.vehicle.kinematics import Vehicle
 
+import random
+
 
 class IDMVehicle(ControlledVehicle):
     """
@@ -223,6 +225,12 @@ class IDMVehicle(ControlledVehicle):
         :param lane_index: the candidate lane for the change
         :return: whether the lane change should be performed
         """
+        # if lane_index[2] == 0:
+        #     t = range(0,1)
+        #     h = random.choice(t)
+        #     if h > 0.2:
+        #         return False
+
         # Is the maneuver unsafe for the new following vehicle?
         new_preceding, new_following = self.road.neighbour_vehicles(self, lane_index)
         new_following_a = self.acceleration(ego_vehicle=new_following, front_vehicle=new_preceding)

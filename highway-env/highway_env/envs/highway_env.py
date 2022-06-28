@@ -8,6 +8,7 @@ from highway_env.road.road import Road, RoadNetwork
 from highway_env.utils import near_split
 from highway_env.vehicle.controller import ControlledVehicle
 from highway_env.vehicle.kinematics import Vehicle
+import random
 
 
 class HighwayEnv(AbstractEnv):
@@ -28,17 +29,17 @@ class HighwayEnv(AbstractEnv):
             "action": {
                 "type": "DiscreteMetaAction",
             },
-            "lanes_count": 4,
-            "vehicles_count": 50,
+            "lanes_count": 3,
+            "vehicles_count": 15,
             "controlled_vehicles": 1,
             "initial_lane_id": None,
             "duration": 40,  # [s]
             "ego_spacing": 2,
-            "vehicles_density": 1,
-            "collision_reward": -2,    # The reward received when colliding with a vehicle.
-            "right_lane_reward": 0.1,  # The reward received when driving on the right-most lanes, linearly mapped to
+            "vehicles_density": 1,    # 1
+            "collision_reward": -2,    # -1 The reward received when colliding with a vehicle.
+            "right_lane_reward": 0.1,  # 0.1 The reward received when driving on the right-most lanes, linearly mapped to
                                        # zero for other lanes.
-            "high_speed_reward": 0.4,  # The reward received when driving at full speed, linearly mapped to zero for
+            "high_speed_reward": 0.4,  # 0.4 The reward received when driving at full speed, linearly mapped to zero for
                                        # lower speeds according to config["reward_speed_range"].
             "lane_change_reward": 0,   # The reward received at each lane change action.
             "reward_speed_range": [20, 30],
@@ -72,10 +73,15 @@ class HighwayEnv(AbstractEnv):
             self.controlled_vehicles.append(vehicle)
             self.road.vehicles.append(vehicle)
 
+            # vehicle_distribution = [4, 48, 48]  # Only works for len(vehicle_distribution) lanes
+
             for _ in range(others):
+                # rnd = random.choices(range(0,self.config['lanes_count']), k=1)[0]
                 vehicle = other_vehicles_type.create_random(self.road, spacing=1 / self.config["vehicles_density"])
                 vehicle.randomize_behavior()
                 self.road.vehicles.append(vehicle)
+
+    
 
     def _reward(self, action: Action) -> float:
         """
@@ -89,14 +95,16 @@ class HighwayEnv(AbstractEnv):
         # Use forward speed rather than speed, see https://github.com/eleurent/highway-env/issues/268
         forward_speed = self.vehicle.speed * np.cos(self.vehicle.heading)
         scaled_speed = utils.lmap(forward_speed, self.config["reward_speed_range"], [0, 1])
+        
         reward = \
-            + self.config["collision_reward"] * self.vehicle.crashed \
             + self.config["right_lane_reward"] * lane / max(len(neighbours) - 1, 1) \
             + self.config["high_speed_reward"] * np.clip(scaled_speed, 0, 1)
+            # + self.config["collision_reward"] * self.vehicle.crashed \
         reward = utils.lmap(reward,
-                          [self.config["collision_reward"],
+                          [0,   #self.config["collision_reward"],
                            self.config["high_speed_reward"] + self.config["right_lane_reward"]],
                           [0, 1])
+        reward = reward + self.config["collision_reward"] * self.vehicle.crashed
         reward = 0 if not self.vehicle.on_road else reward
         return reward
 
