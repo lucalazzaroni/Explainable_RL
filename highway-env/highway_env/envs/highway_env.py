@@ -36,12 +36,13 @@ class HighwayEnv(AbstractEnv):
             "duration": 40,  # [s]
             "ego_spacing": 2,
             "vehicles_density": 1,    # 1
-            "collision_reward": -2,    # -1 The reward received when colliding with a vehicle.
+            "collision_reward": -1,    # -1 The reward received when colliding with a vehicle.
             "right_lane_reward": 0.1,  # 0.1 The reward received when driving on the right-most lanes, linearly mapped to
                                        # zero for other lanes.
             "high_speed_reward": 0.4,  # 0.4 The reward received when driving at full speed, linearly mapped to zero for
                                        # lower speeds according to config["reward_speed_range"].
             "lane_change_reward": 0,   # The reward received at each lane change action.
+            "time_headway_reward": -0.5,
             "reward_speed_range": [20, 30],
             "offroad_terminal": False
         })
@@ -76,7 +77,7 @@ class HighwayEnv(AbstractEnv):
             # vehicle_distribution = [4, 48, 48]  # Only works for len(vehicle_distribution) lanes
 
             for _ in range(others):
-                # rnd = random.choices(range(0,self.config['lanes_count']), k=1)[0]
+                # rnd = random.choices(range(0,self.config['lanes_count']), k=1)[0] 
                 vehicle = other_vehicles_type.create_random(self.road, spacing=1 / self.config["vehicles_density"])
                 vehicle.randomize_behavior()
                 self.road.vehicles.append(vehicle)
@@ -95,13 +96,18 @@ class HighwayEnv(AbstractEnv):
         # Use forward speed rather than speed, see https://github.com/eleurent/highway-env/issues/268
         forward_speed = self.vehicle.speed * np.cos(self.vehicle.heading)
         scaled_speed = utils.lmap(forward_speed, self.config["reward_speed_range"], [0, 1])
+
+        v_front, _ = self.road.neighbour_vehicles(self.vehicle)
+        time_headway = self.vehicle.front_distance_to(v_front) / forward_speed
+        th_penalty = 0 if time_headway > 1.5 else 1 / time_headway
         
         reward = \
+            + self.config["time_headway_reward"] * th_penalty \
             + self.config["right_lane_reward"] * lane / max(len(neighbours) - 1, 1) \
             + self.config["high_speed_reward"] * np.clip(scaled_speed, 0, 1)
             # + self.config["collision_reward"] * self.vehicle.crashed \
         reward = utils.lmap(reward,
-                          [0,   #self.config["collision_reward"],
+                          [self.config["time_headway_reward"],   #self.config["collision_reward"],
                            self.config["high_speed_reward"] + self.config["right_lane_reward"]],
                           [0, 1])
         reward = reward + self.config["collision_reward"] * self.vehicle.crashed
