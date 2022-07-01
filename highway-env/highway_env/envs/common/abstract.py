@@ -62,6 +62,7 @@ class AbstractEnv(gym.Env):
         self.done = False
         
         self.actionn = None
+        self.previous_action = None
 
         # Rendering
         self.viewer = None
@@ -188,6 +189,7 @@ class AbstractEnv(gym.Env):
         self.define_spaces()  # First, to set the controlled vehicle class depending on action space
         self.time = self.steps = 0
         self.done = False
+        self.previous_action = None
         self._reset()
         self.define_spaces()  # Second, to link the obs and actions to the vehicles once the scene is created
         return self.observation_type.observe()

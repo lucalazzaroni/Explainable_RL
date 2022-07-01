@@ -13,9 +13,9 @@ from math import modf
 # REMEMBER apt-get install -y xvfb python-opengl ffmpeg
 
 def removeAction (action_log, state_log):
-    state_log_abss = np.zeros(shape=(action_log.shape[0],15,7), dtype = 'float')
+    state_log_abss = np.zeros(shape=(action_log.shape[0],8,7), dtype = 'float')
     for fr in range (action_log.shape[0]):
-        for veh in range(0,15):
+        for veh in range(0,8):
             for ft in range(1,7):
                 if (veh == 0):
                     state_log_abss[fr][veh,ft] = state_log[fr][veh,ft]
@@ -61,9 +61,9 @@ def test(env, agent):
         action_log = removeAction(action_log, state_log)
 
         num_of_frame = action_log.shape[0]
-        print(colored('EPISODE %i' %ep, 'red', attrs=['bold']))
+        print('EPISODE %i' %ep)
         print(f'Number of frames: {num_of_frame}')
-        if num_of_frame < 40: # Hard coded!!!!
+        if num_of_frame < 80: # Hard coded!!!!
             print("Episode failed, skipped")
             num_failed_episodes = num_failed_episodes + 1
     
@@ -80,7 +80,7 @@ def main():
     env = load_environment(env_config)
     agent = load_agent(agent_config, env)
     
-    evaluation = Evaluation(env, agent, num_episodes=5000, display_env=False, display_agent=False, recover=False)
+    evaluation = Evaluation(env, agent, num_episodes=1500, display_env=False, display_agent=False, recover=False)
     print(f"Ready to train {agent} on {env}")
     evaluation.train()
     test(env, agent)
