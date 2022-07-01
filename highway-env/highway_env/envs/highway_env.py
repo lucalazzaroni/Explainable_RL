@@ -36,13 +36,13 @@ class HighwayEnv(AbstractEnv):
             "duration": 40,  # [s]
             "ego_spacing": 2,
             "vehicles_density": 0.6,    # 1
-            "collision_reward": -1,    # -1 The reward received when colliding with a vehicle.
+            "collision_reward": -2,    # -1 The reward received when colliding with a vehicle.
             "right_lane_reward": 0.1,  # 0.1 The reward received when driving on the right-most lanes, linearly mapped to
                                        # zero for other lanes.
             "high_speed_reward": 0.4,  # 0.4 The reward received when driving at full speed, linearly mapped to zero for
                                        # lower speeds according to config["reward_speed_range"].
             "lane_change_reward": 0,   # The reward received at each lane change action.
-            "time_headway_reward": -0.35,
+            "time_headway_reward": -0.2,
             "zig_zag_reward": -0.4,
             "reward_speed_range": [20, 30],
             "offroad_terminal": False
@@ -103,22 +103,23 @@ class HighwayEnv(AbstractEnv):
         th_penalty = 0 if time_headway > 1 else 1 / time_headway
         
         reward = \
-            + self.config["zig_zag_reward"] * self._zig_zag_reward(action) \
-            + self.config["time_headway_reward"] * th_penalty \
             + self.config["right_lane_reward"] * lane / max(len(neighbours) - 1, 1) \
             + self.config["high_speed_reward"] * np.clip(scaled_speed, 0, 1)
             # + self.config["collision_reward"] * self.vehicle.crashed \
         reward = utils.lmap(reward,
-                          [self.config["time_headway_reward"] + self.config["zig_zag_reward"],   #self.config["collision_reward"],
+                          [0,   #self.config["collision_reward"],
                            self.config["high_speed_reward"] + self.config["right_lane_reward"]],
                           [0, 1])
+
+        reward = reward + self.config["time_headway_reward"] * th_penalty
+        reward = reward + self.config["zig_zag_reward"] * self._zig_zag_reward(action, lane, len(neighbours))
         reward = reward + self.config["collision_reward"] * self.vehicle.crashed
         reward = 0 if not self.vehicle.on_road else reward
         return reward
 
-    def _zig_zag_reward(self, action):
+    def _zig_zag_reward(self, action, lane, lanes_count):
         penalty = 0
-        if action == 2 and self.previous_action == 0 or action == 0 and self.previous_action == 2:
+        if action == 2 and self.previous_action == 0 and lane != 0 or action == 0 and self.previous_action == 2 and lane != lanes_count - 1:
             penalty = 1
         self.previous_action = action
         return penalty

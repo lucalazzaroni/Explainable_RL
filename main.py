@@ -10,6 +10,7 @@ from termcolor import colored
 from scipy.special import kl_div
 from scipy.special import softmax
 from math import modf
+import time
 # REMEMBER apt-get install -y xvfb python-opengl ffmpeg
 
 def removeAction (action_log, state_log):
@@ -70,6 +71,7 @@ def test(env, agent):
     print(f'RATE OF FAILED EPISODES: {num_failed_episodes/num_episodes*100}%')
 
 def main():
+    t = time.time()
     device = torch.device('cuda')
     
 
@@ -84,6 +86,7 @@ def main():
     print(f"Ready to train {agent} on {env}")
     evaluation.train()
     test(env, agent)
+    print(f'TIME ELAPSED: {time.time() - t}')
     
 if __name__ == '__main__':
     main()
