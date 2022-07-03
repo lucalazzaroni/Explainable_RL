@@ -36,14 +36,14 @@ class HighwayEnv(AbstractEnv):
             "duration": 40,  # [s]
             "ego_spacing": 2,
             "vehicles_density": 0.6,    # 1
-            "collision_reward": -2,    # -1 The reward received when colliding with a vehicle.
+            "collision_reward": -6,    # -1 The reward received when colliding with a vehicle.
             "right_lane_reward": 0.1,  # 0.1 The reward received when driving on the right-most lanes, linearly mapped to
                                        # zero for other lanes.
             "high_speed_reward": 0.4,  # 0.4 The reward received when driving at full speed, linearly mapped to zero for
                                        # lower speeds according to config["reward_speed_range"].
             "lane_change_reward": 0,   # The reward received at each lane change action.
             "time_headway_reward": -0.2,
-            "zig_zag_reward": -0.4,
+            "zig_zag_reward": -0.6,
             "reward_speed_range": [20, 30],
             "offroad_terminal": False
         })
